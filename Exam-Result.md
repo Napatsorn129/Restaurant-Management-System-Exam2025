@@ -2,9 +2,9 @@
 
 > **ข้อสอบปฏิบัติการทดสอบและติดตั้งระบบซอฟต์แวร์เชิงธุรกิจ**  
 > รายวิชา: การออกแบบและพัฒนาซอฟต์แวร์ 1  
-> ชื่อ-นามสกุล: ___________________________  
-> รหัสนักศึกษา: ___________________________  
-> วันที่สอบ: ___________________________
+> ชื่อ-นามสกุล: นางสาวนภัสสร คำปัน 
+> รหัสนักศึกษา: 68030129 
+> วันที่สอบ: วันที่8 พ.ค 2569
 
 ---
 
@@ -59,10 +59,13 @@
 | Security  | JWT, RBAC, SQL Injection, XSS |
 
 #### Out of Scope
-| Feature       | เหตุผลที่ไม่ทดสอบ |
-|---------------|--------------------|
-| <!-- ตัวอย่าง --> Performance Load Test (JMeter) | ไม่อยู่ในขอบเขตของข้อสอบนี้ |
-| <!-- เพิ่มเติม --> | |
+| Feature                                 | เหตุผลที่ไม่ทดสอบ |
+|-----------------------------------------|--------------------|
+| Performance / Load Testing (JMeter, k6) | ไม่อยู่ในขอบเขตของข้อสอบและต้องการสภาพแวดล้อมพิเศษ |
+| UI/UX Usability Testing                 | ต้องใช้ผู้ทดสอบจริง ไม่สามารถทำอัตโนมัติในเวลาที่กำหนด |
+| Third-party Payment Gateway             | ระบบนี้ไม่มีการเชื่อมต่อ Payment Gateway ภายนอก |
+| Mobile Responsive Testing               | ไม่ได้กำหนดเป็น Requirement หลักของระบบในข้อสอบนี้ |
+
 
 ---
 
@@ -82,39 +85,45 @@
 
 | รายการ         | เวอร์ชัน / ค่า                     |
 |----------------|------------------------------------|
-| OS             | <!-- เช่น Windows 11 / Ubuntu 22.04 --> |
-| Node.js        | 22 LTS                             |
-| npm            | <!-- ระบุเวอร์ชัน -->               |
-| Docker         | <!-- ระบุเวอร์ชัน -->               |
-| PostgreSQL     | 16 (Neon.tech)                     |
-| Browser        | <!-- เช่น Chrome 124 -->            |
-| Newman         | <!-- ระบุเวอร์ชัน -->               |
-
+| OS             | Windows 11 / macOS / Ubuntu (ระบุของจริง) |
+| Node.js        | 22 LTS |
+| npm            | (รัน `npm -v` แล้วใส่) |
+| Docker         | (รัน `docker -v` แล้วใส่) |
+| PostgreSQL     | 16 (Neon.tech) |
+| Browser        | Chrome 124+ |
+| Newman         | (รัน `newman --version` แล้วใส่) |
 ---
 
 ### 1.4 เงื่อนไขการผ่าน/ไม่ผ่านการทดสอบ (Entry / Exit Criteria)
 
 #### Entry Criteria (เงื่อนไขเริ่มทดสอบ)
-- [ ] Repository ถูก Clone และรัน Backend + Frontend ได้
-- [ ] Database เชื่อมต่อ Neon.tech สำเร็จ
-- [ ] `/api/health` ตอบกลับ `{"status":"ok"}`
-- [ ] Postman Collection พร้อมสำหรับ Newman
+| เงื่อนไข                    | รายละเอียด |
+|---------------------------|------------|
+| ระบบ Build ได้ไม่มี Error    | `npm run build` ของ backend และ frontend ต้องสำเร็จ |
+| Database เชื่อมต่อได้         | `DATABASE_URL` ถูกต้องและ Prisma seed รันผ่าน |
+| API Health Check ผ่าน      | `GET /api/health` ตอบ `{"status":"ok"}` |
+| Postman Collection พร้อม   | Environment Variables ตั้งค่าครบ |
+
 
 #### Exit Criteria (เงื่อนไขผ่านการทดสอบ)
-- Newman Pass Rate ≥ **80%** ถือว่าพร้อมติดตั้ง
-- ไม่มี Bug ระดับ **Critical** ที่ยังไม่ได้แก้ไข
-- Smoke Test ผ่านทุก 4 Feature หลักบน Production
+| เกณฑ์                       | ค่าที่กำหนด |
+|----------------------------|-----------|
+| Newman Pass Rate           | ≥ 80% |
+| Unit Test Pass Rate        | 100% |
+| Critical/High Bug ที่ยังเปิดอยู่ | = 0 |
+| Security Scan ระดับ High+   | = 0 หรือมี Mitigation Plan |
+| Smoke Test บน Staging      | ผ่านทั้ง 4 Feature |
 
 ---
 
 ### 1.5 ความเสี่ยงเชิงธุรกิจ (Business Risk)
 
-| # | Feature ที่มีความเสี่ยง | ผลกระทบหากเกิดความผิดพลาด | ระดับความเสี่ยง |
-|---|------------------------|--------------------------|----------------|
-| 1 | Payment (ชำระเงิน)      | ร้านไม่สามารถรับเงินได้ ลูกค้ารอนาน เสียรายได้โดยตรง | Critical |
-| 2 | Order (รับออเดอร์)      | ออเดอร์ไม่ถึงครัว อาหารไม่ถูกจัดเตรียม ลูกค้าไม่พอใจ | High |
-| <!-- เพิ่มอย่างน้อย 2 รายการ --> | | | |
-
+| # | Feature | ความเสี่ยง | ผลกระทบ | ระดับ |
+|---|---------|-----------|---------|-------|
+| 1 | Payment | คำนวณเงินทอนผิด เช่น จ่าย 500 บิล 350 ทอน 50 แทน 150 | ร้านขาดทุนทุกธุรกรรม สูญเสียความน่าเชื่อถือ | 🔴 Critical |
+| 2 | Auth    | JWT ไม่หมดอายุหรือใช้ซ้ำหลัง Logout ได้ | ข้อมูลการเงินรั่วไหล อาจละเมิด PDPA | 🔴 Critical |
+| 3 | Order   | ออเดอร์หายหลัง Confirm ไม่ถูก Save ลง Database | ครัวไม่ได้รับออเดอร์ ลูกค้ารอนาน เสียรายได้ | 🟠 High |
+| 4 | Report  | ยอดขายแสดงผิด คำนวณนับซ้ำหรือขาดรายการ | ตัดสินใจทางธุรกิจบนข้อมูลผิด สั่งวัตถุดิบผิดปริมาณ | 🟠 High |
 ---
 
 ## Test Cases & Results
@@ -123,20 +132,21 @@
 
 ### กรณีทดสอบทั้งหมด (≥ 10 กรณี)
 
-| TC-ID   | Type     | Feature  | Scenario                        | Input                                             | Expected Result          | Actual Result | Pass/Fail |
-|---------|----------|----------|---------------------------------|---------------------------------------------------|--------------------------|---------------|-----------|
-| TC-001  | Positive | Auth     | Login ด้วย credential ถูกต้อง  | `{username: "admin", password: "Admin@123"}`      | HTTP 200 + JWT Token     |               | ⬜        |
-| TC-002  | Positive | Menu     | เพิ่มเมนูใหม่สำเร็จ            | `{name: "ข้าวผัด", price: 60, stock: 100}`        | HTTP 201 + menu object   |               | ⬜        |
-| TC-003  | Positive | Payment  | ชำระเงินและรับเงินทอนถูกต้อง   | `{orderId: 1, amount: 200}`                       | HTTP 200 + change = X    |               | ⬜        |
-| TC-004  | Negative | Auth     | Login ด้วย password ผิด        | `{username: "admin", password: "wrong"}`          | HTTP 401 Unauthorized    |               | ⬜        |
-| TC-005  | Negative | Order    | เพิ่มสินค้าที่หมดสต็อก         | `{menuId: 99, quantity: 999}`                     | HTTP 400 + error message |               | ⬜        |
-| TC-006  | Negative | Payment  | ชำระเงินน้อยกว่ายอดรวม        | `{orderId: 1, amount: 10}`                        | HTTP 400 Insufficient    |               | ⬜        |
-| TC-007  | Security | Auth     | เรียก API โดยไม่มี JWT Token   | GET /api/orders (no header)                       | HTTP 401 Unauthorized    |               | ⬜        |
-| TC-008  | Security | Order    | Cashier เข้าถึง Admin endpoint | Token ของ Cashier + DELETE /api/menu/1            | HTTP 403 Forbidden       |               | ⬜        |
-| TC-009  | Security | Auth     | SQL Injection ใน Login field   | `{username: "' OR 1=1 --", password: "x"}`        | HTTP 401 (ไม่ผ่าน Login) |               | ⬜        |
-| TC-010  | Edge     | Order    | ออเดอร์ที่ไม่มีสินค้า (0 ชิ้น) | `{tableId: 1, items: []}`                         | HTTP 400 + error message |               | ⬜        |
-| TC-011  | Edge     | Payment  | ชำระเงินพอดียอด (change = 0)   | `{orderId: 1, amount: exactTotal}`                | HTTP 200 + change = 0    |               | ⬜        |
-| <!-- เพิ่มกรณีทดสอบ --> | | | | | | | |
+## Test Cases & Results
+
+| TC-ID | Feature | Scenario | Input | Expected | Actual | Pass/Fail |
+|-------|---------|----------|-------|----------|--------|-----------|
+| TC-001 | Auth | **[Positive]** Login ด้วย admin ถูกต้อง | `{username:"admin", password:"Admin@123"}` | HTTP 200 + JWT token | | |
+| TC-002 | Menu | **[Positive]** เพิ่มเมนูใหม่สำเร็จ | `{name:"ข้าวผัด", price:60, category:"main"}` | HTTP 201 + object ที่สร้าง | | |
+| TC-003 | Payment | **[Positive]** ชำระเงินและได้ทอนถูกต้อง | orderId ที่ confirm แล้ว, amount:200, total:150 | HTTP 200, change:50 | | |
+| TC-004 | Auth | **[Negative]** Login password ผิด | `{username:"admin", password:"wrong"}` | HTTP 401 | | |
+| TC-005 | Order | **[Negative]** เพิ่ม item ใน order ที่ปิดแล้ว | closedOrderId + itemId | HTTP 400 หรือ 403 | | |
+| TC-006 | Menu | **[Negative]** สร้างเมนูราคาติดลบ | `{name:"test", price:-1}` | HTTP 400 + error message | | |
+| TC-007 | Security | **[Security]** เรียก API โดยไม่มี Token | `GET /api/orders` (ไม่มี Authorization header) | HTTP 401 Unauthorized | | |
+| TC-008 | Security | **[Security]** Waiter เข้าถึง Admin endpoint | Waiter token + `DELETE /api/menu/:id` | HTTP 403 Forbidden | | |
+| TC-009 | Security | **[Security]** SQL Injection ใน login | `{username:"admin'--", password:"x"}` | HTTP 401, ไม่ bypass auth | | |
+| TC-010 | Order | **[Edge]** Confirm order ที่ไม่มี item เลย | POST /api/orders/confirm, items:[] | HTTP 400 + error message | | |
+| TC-011 | Payment | **[Edge]** ชำระเงินพอดี (change = 0) | amount = totalPrice | HTTP 200, change:0 | | |
 
 **สรุปผล:** ผ่าน ___ / ___ กรณี (___%)
 
@@ -145,6 +155,19 @@
 ## Test Reports
 
 > **ส่วนที่ 3 (ต่อ) — ผลการรัน Newman**
+
+### Newman Run Result
+- Total assertions: 13
+- Passed: 10
+- Failed: 3
+- **Pass Rate: 77%**
+
+### Failures (ล้วนเป็น Bug ในระบบ)
+| # | TC | Expected | Actual | สาเหตุ |
+|---|----|----|----|----|
+| 1 | TC-006 Negative Price | 400 | 201 | BUG-001: ระบบรับราคาติดลบ |
+| 2 | TC-008 Role Forbidden | 403 | 200 | token เป็น admin ในรอบนี้ |
+| 3 | TC-010 Empty Order | 400 | 201 | BUG-002: ระบบรับ order ว่าง |
 
 ### Newman E2E Test Summary
 
@@ -230,56 +253,81 @@ cd frontend && npm audit --audit-level=moderate
 ---
 
 ### BUG-001: [ชื่อ Bug สั้น ๆ]
-
-**Severity:** Critical / High / Medium / Low  
-**Priority:** P1 / P2 / P3  
-**Feature:** [Feature ที่มีปัญหา เช่น Payment]  
+## BUG-001: ระบบยอมรับราคาติดลบในเมนู
+**Severity:** High
+**Priority:** P2
+**Feature:** Menu
 **Status:** Open / Fixed
 
 #### Steps to Reproduce
-1. ...
-2. ...
-3. ...
+1. Login ด้วย admin token
+2. POST /api/menu พร้อม body {"name":"ทดสอบ","price":-1,"category":"food"}
+3. ดูผลลัพธ์
 
 #### Expected Result
-> [สิ่งที่ควรเกิดขึ้น]
+> HTTP 400 Bad Request — ราคาต้องมากกว่า 0
 
 #### Actual Result
-> [สิ่งที่เกิดขึ้นจริง]
+> HTTP 201 Created — ระบบสร้างเมนูราคา -1 บาทสำเร็จ (id: 12)
 
 #### Evidence
 > 📸 วางภาพหน้าจอที่นี่  
-> `![BUG-001 Screenshot](./tests/reports/bug-001.png)`
+> `![alt text](bug-001.png)`
 
 #### Business Impact
-> [ผลกระทบต่อธุรกิจ — เช่น ลูกค้าชำระเงินไม่ได้ ทำให้ร้านเสียรายได้]
-
+> เมนูที่มีราคาติดลบทำให้คำนวณยอดขายผิดพลาด ร้านอาหารสูญเสียรายได้
 ---
 
 ### BUG-002: [ชื่อ Bug สั้น ๆ]
-
-**Severity:** Critical / High / Medium / Low  
-**Priority:** P1 / P2 / P3  
-**Feature:** [Feature ที่มีปัญหา]  
+## BUG-002: ระบบยอมรับ Order ที่ไม่มีสินค้าเลย
+**Severity:** High
+**Priority:** P2
+**Feature:** Order 
 **Status:** Open / Fixed
 
 #### Steps to Reproduce
-1. ...
-2. ...
-3. ...
+1. Login ด้วย waiter token
+2. POST /api/orders พร้อม body {"tableId":1,"items":[]}
+3. ดูผลลัพธ์
 
 #### Expected Result
-> [สิ่งที่ควรเกิดขึ้น]
+> HTTP 400 Bad Request — ต้องมีสินค้าอย่างน้อย 1 รายการ
 
 #### Actual Result
-> [สิ่งที่เกิดขึ้นจริง]
+> HTTP 201 Created — ระบบสร้าง order ว่างสำเร็จ (id:1, totalAmount:"0")
 
 #### Evidence
 > 📸 วางภาพหน้าจอที่นี่  
-> `![BUG-002 Screenshot](./tests/reports/bug-002.png)`
+> `![alt text](bug-002.png)`
 
 #### Business Impact
-> [ผลกระทบต่อธุรกิจ]
+> ครัวได้รับออเดอร์ว่าง ทำให้สับสนและเสียเวลา อาจทำให้โต๊ะถูก occupy โดยไม่มีออเดอร์จริง
+
+---
+
+### ## BUG-003: [ชื่อ Bug สั้น ๆ]
+## BUG-003: ระบบยอมรับการชำระเงินที่น้อยกว่ายอดรวม และคำนวณเงินทอนติดลบ
+**Severity:** Critical
+**Priority:** P1
+**Feature:** Payment
+
+### Steps to Reproduce
+1. สร้าง order และ confirm (totalAmount = 160)
+2. POST /api/payments ด้วย {"orderId":1, "amountPaid":100}
+3. ดูผลลัพธ์
+
+### Expected Result
+> HTTP 400 Bad Request — จำนวนเงินที่จ่ายน้อยกว่ายอดรวม ไม่สามารถชำระได้
+
+### Actual Result
+> HTTP 201 Created — ระบบประมวลผลสำเร็จ และคืน change: -60 (ติดลบ)
+
+#### Evidence
+> 📸 วางภาพหน้าจอที่นี่  
+> `![alt text](bug-003.png)`
+
+### Business Impact
+> ร้านอาหารสูญเสียรายได้ทุกครั้งที่ลูกค้าจ่ายเงินไม่ครบ เนื่องจากระบบไม่ตรวจสอบ
 
 ---
 
@@ -470,3 +518,7 @@ Build Command:  npm run build
 ---
 
 *Template สร้างจากข้อสอบปฏิบัติการทดสอบและติดตั้งระบบซอฟต์แวร์เชิงธุรกิจ — PRIME-BSD Model*
+
+
+
+
