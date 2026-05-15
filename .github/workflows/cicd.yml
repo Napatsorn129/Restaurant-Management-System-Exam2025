@@ -1,0 +1,46 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Run backend unit tests
+        working-directory: ./backend
+        run: npm test
+
+      - name: Install Newman
+        run: npm install -g newman
+
+      - name: Run Newman API tests
+        run: |
+          newman run tests/postman/RMS-68030129-TestSuite.json \
+            -e tests/postman/env-ci.json \
+            --reporters cli,json \
+            --reporter-json-export tests/reports/newman-results.json
+
+      - name: Security audit backend
+        working-directory: ./backend
+        run: npm audit --audit-level=high
+
+      - name: Security audit frontend
+        working-directory: ./frontend
+        run: npm audit --audit-level=high
